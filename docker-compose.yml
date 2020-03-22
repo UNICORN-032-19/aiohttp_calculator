@@ -1,0 +1,43 @@
+version: '3.2'
+
+services:
+
+  aiohttp_calculator_app: &app
+    tty: true
+    build:
+      context: .
+      args:
+        requirements: requirements/development.txt
+    container_name: aiohttp_calculator
+    environment:
+      # use in code
+      - DEBUG=True
+      - SETTINGS_FILE=api.dev.yml
+      - PYTHONUNBUFFERED=1
+    restart: always
+    volumes:
+      - .:/app:delegated
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+      - 8081:8081
+    command: make adev
+
+  postgres:
+      image: postgres:10
+      container_name: aiohttp_calculator_postgres
+      environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=postgres
+          - POSTGRES_DB=postgres
+      ports:
+          - 5432
+
+  test:
+    <<: *app
+    container_name: aiohttp_calculator_test
+    ports:
+      - 8082:8082
+    entrypoint: py.test -v -p no:warnings
+    command: ''
