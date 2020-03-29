@@ -4,7 +4,7 @@ import aiohttp_jinja2
 import markdown2
 from aiohttp import web
 import json
-from aiohttp_calculator.main.db_utils import save_result
+from aiohttp_calculator.main.db_utils import save_result, get_results
 
 
 @aiohttp_jinja2.template('index.html')
@@ -67,6 +67,9 @@ async def compute(request: web.Request) -> web.Response:
     return web.Response(text=json.dumps(return_result))
 
 
+@aiohttp_jinja2.template('results.html')
 async def results(request):
-    results = Result.objects.all()
-    return render(request, 'results.html', context={"results": results})
+    results = {}
+    async with request.app["db"].acquire() as conn:
+        results = await get_results(conn)
+    return {"results": results}
